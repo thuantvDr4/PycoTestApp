@@ -7,13 +7,12 @@
  */
 
 import React, {Fragment} from 'react';
-
-import Routers from './Routers';
+import Main from './Components/Main';
 
 const App = () => {
   return (
     <Fragment>
-      <Routers />
+      <Main />
     </Fragment>
   );
 };
