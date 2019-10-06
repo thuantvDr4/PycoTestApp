@@ -7,13 +7,14 @@
  */
 
 import React, {Fragment} from 'react';
+import Store from '../src/hookContext/Store';
 import Main from './Components/Main';
 
 const App = () => {
   return (
-    <Fragment>
+    <Store>
       <Main />
-    </Fragment>
+    </Store>
   );
 };
 export default App;
