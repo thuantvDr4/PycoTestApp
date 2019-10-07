@@ -155,7 +155,7 @@ const Main = () => {
     const data = state.myFavorite;
     return data.map(item => (
       <View
-        key={item.id}
+        key={item.data.seed}
         style={{height: hp('8%'), margin: 5, flexDirection: 'row'}}>
         <Avatar.Image
           size={wp('10%')}
