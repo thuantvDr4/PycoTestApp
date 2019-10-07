@@ -7,10 +7,12 @@ import * as types from './actionTypes';
 
 //=======Create default state
 const defaultState = {
-  userData: [],
+  userData: {},
+  user: {},
   isTest: false,
   content: 'hello hook',
-  temp: null,
+  error: null,
+  myFavorite: [],
 };
 
 //=====Create Reducers ===================
@@ -20,13 +22,19 @@ function reducerCreator(state, action) {
       return {
         ...state,
         isTest: !state.isTest,
-        temp: action.payload,
+        userData: action.payload,
+        user: action.payload.data.results[0].user,
       };
 
     case types.GET_DATA_USER_FAILURE:
       return {
         ...state,
-        temp: action.payload,
+        error: action.payload,
+      };
+    case types.ADD_MY_FAVORITE:
+      return {
+        ...state,
+        myFavorite: [...state.myFavorite].concat(action.payload),
       };
 
     default:

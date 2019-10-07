@@ -19,27 +19,36 @@ import {
 
 // == libs import
 import {Avatar} from 'react-native-paper';
+import axios from 'axios';
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 //===import file
 import {StoreContext} from '../hookContext/Store';
-import {getDataUser, ErrorShow} from '../hookContext/actionCreator';
-import {GetUserData} from '../Api/UserApi';
+import {
+  getDataUser,
+  ErrorShow,
+  add_my_favorite,
+} from '../hookContext/actionCreator';
+import {GetUserData, GetTemps} from '../Api/UserApi';
 
 //=====>
-const ImageSrc = require('../assets/home.png');
+const Icon_user = require('../assets/user_o.png');
+const Icon_contact = require('../assets/contact.png');
+const Icon_map = require('../assets/map.png');
+const Icon_phone = require('../assets/phone.png');
+const Icon_lock = require('../assets/lock.png');
 
 //todo: END
 const Main = () => {
   //todo: begin-set state
   const [state, dispatch] = useContext(StoreContext);
+  const [user, setUser] = useState(state.user);
   const [values, setValues] = useState({
     active: false,
-    index: 3,
-    title: null,
-    content: null,
+    index: 0,
   });
   const [temp, setTemp] = useState('...');
 
@@ -69,25 +78,25 @@ const Main = () => {
   //todo: BEGIN functions
 
   // Similar to componentDidMount and componentDidUpdate:
+
   useEffect(() => {
     // Update the document title using the browser API
     // document.title = `You clicked ${count} times`;
-    dispatch(getDataUser());
-  }, [dispatch]);
+    _getDataUser_api();
+  }, []);
 
-  function _pressMe() {
+  async function _getDataUser_api() {
     // dispatch(getDataUser());
-    let cityName = 'saigon';
-    GetUserData()
-      .then(_temp => {
-        setTemp(_temp);
-        dispatch(getDataUser(_temp));
-      })
-      .catch(err => {
-        setTemp('...');
-        dispatch(ErrorShow('ERROR!'));
-      });
-
+    const user_uri = 'https://randomuser.me/api/0.4/?randomapi';
+    try {
+      const res = await axios.get(user_uri);
+      const {data} = await res;
+      console.log(data);
+      dispatch(getDataUser({data}));
+    } catch (e) {
+      setTemp('...');
+      dispatch(ErrorShow('ERROR!'));
+    }
     // alert('test');
   }
 
@@ -97,170 +106,257 @@ const Main = () => {
         return setValues({
           ...values,
           index: index,
-          title: 'index 1',
-          content: 'content 1',
         });
       case 2:
         return setValues({
           ...values,
           index: index,
-          title: 'index 2',
-          content: 'content 2',
         });
       case 3:
         return setValues({
           ...values,
           index: index,
-          title: 'index 3',
-          content: 'content 3',
         });
       case 4:
         return setValues({
           ...values,
           index: index,
-          title: 'index 4',
-          content: 'content 4',
         });
       case 5:
         return setValues({
           ...values,
           index: index,
-          title: 'index 5',
-          content: 'content 5',
         });
       default:
         return setValues({...values});
     }
   }
 
-  //=todo: END FUNCTION
-  return (
-    <View style={styles.container}>
-      <View style={styles.apbar} />
-      <View style={styles.paper}>
-        <Text style={{marginTop: 100, color: 'grey', fontSize: 18}}>
-          {values.title}
-        </Text>
-        <Text style={{marginTop: 5, color: 'black', fontSize: 24}}>
-          {values.content}
-        </Text>
-        <View style={styles.tabIcon}>
-          {/*ICON 1*/}
-          <TouchableOpacity
-            style={[
-              styles.iconContain,
-              {
-                borderTopWidth: ICON_1.borderTopWidth,
-                borderColor: ICON_1.color,
-              },
-            ]}
-            onPress={() => iconPress(1)}>
-            <Image
-              style={[
-                styles.iconImage,
-                {
-                  tintColor: ICON_1.color,
-                },
-              ]}
-              source={ImageSrc}
-            />
-          </TouchableOpacity>
+  function _checkData() {
+    console.log('Myfavorite');
+    console.log(state.myFavorite);
+  }
+  function onSwipeLeft(gestureState) {
+    // alert('onSwipeLeft');
+    _getDataUser_api();
+  }
 
-          {/*ICON 2*/}
-          <TouchableOpacity
-            style={[
-              styles.iconContain,
-              {
-                borderTopWidth: ICON_2.borderTopWidth,
-                borderColor: ICON_2.color,
-              },
-            ]}
-            onPress={() => iconPress(2)}>
-            <Image
+  function onSwipeRight(gestureState) {
+    const data = state.user;
+    dispatch(add_my_favorite({data}));
+  }
+
+  function _add_favorite() {
+    const data = state.user;
+    dispatch(add_my_favorite({data}));
+  }
+
+  const _renderContent = () => {
+    const data = state.myFavorite;
+    return data.map(item => (
+      <View
+        key={item.id}
+        style={{height: hp('8%'), margin: 5, flexDirection: 'row'}}>
+        <Avatar.Image
+          size={wp('10%')}
+          // source={require('../assets/avatar.png')}AVATAR_SRC
+          source={{uri: item.data.picture}}
+          style={{marginRight: 5}}
+        />
+        <Text>usename :</Text>
+        <Text>{item.data.username}</Text>
+      </View>
+    ));
+  };
+  //=todo: END FUNCTION
+  const AVATAR_SRC = {
+    uri: state.user.picture,
+  };
+  //todo: RENDER DATA
+  const data =
+    values.index === 1
+      ? {
+          title: 'My name is',
+          content:
+            state.user.name.title +
+            '-' +
+            state.user.name.first +
+            ' ' +
+            state.user.name.last,
+          sub: state.user.gender,
+        }
+      : values.index === 2
+      ? {
+          title: 'My email is',
+          content: state.user.email,
+          sub: null,
+        }
+      : values.index === 3
+      ? {
+          title: 'My address is',
+          content: state.user.location.street,
+          sub: state.user.location.city,
+        }
+      : values.index === 4
+      ? {
+          title: 'My phone is',
+          content: 'phone: ' + state.user.phone,
+          sub: 'cellPhone: ' + state.user.cell,
+        }
+      : values.index === 5
+      ? {
+          title: 'My ...',
+          content: null,
+          sub: null,
+        }
+      : { title: null,
+          content: null,
+          sub: null,};
+
+  //==todo: BEGIN RETURN
+  const config = {
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80,
+  };
+
+  return (
+    <GestureRecognizer
+      style={styles.container}
+      onSwipeLeft={onSwipeLeft}
+      onSwipeRight={onSwipeRight}
+      config={config}>
+      <View style={styles.container}>
+        <View style={styles.apbar} />
+        <View style={styles.paper}>
+          <Text style={{marginTop: hp('13%'), color: 'grey', fontSize: 18}}>
+            {data.title}
+          </Text>
+          <Text style={{marginTop: 1, color: 'black', fontSize: 20}}>
+            {data.content}
+          </Text>
+          <Text style={{marginTop: 1, color: 'grey', fontSize: 18}}>
+            {data.sub}
+          </Text>
+          <View style={styles.tabIcon}>
+            {/*ICON 1*/}
+            <TouchableOpacity
               style={[
-                styles.iconImage,
+                styles.iconContain,
                 {
-                  tintColor: ICON_2.color,
+                  borderTopWidth: ICON_1.borderTopWidth,
+                  borderColor: ICON_1.color,
                 },
               ]}
-              source={ImageSrc}
-            />
-          </TouchableOpacity>
-          {/*ICON 3*/}
-          <TouchableOpacity
-            style={[
-              styles.iconContain,
-              {
-                borderTopWidth: ICON_3.borderTopWidth,
-                borderColor: ICON_3.color,
-              },
-            ]}
-            onPress={() => iconPress(3)}>
-            <Image
+              onPress={() => iconPress(1)}>
+              <Image
+                style={[
+                  styles.iconImage,
+                  {
+                    tintColor: ICON_1.color,
+                  },
+                ]}
+                source={Icon_user}
+              />
+            </TouchableOpacity>
+
+            {/*ICON 2*/}
+            <TouchableOpacity
               style={[
-                styles.iconImage,
+                styles.iconContain,
                 {
-                  tintColor: ICON_3.color,
+                  borderTopWidth: ICON_2.borderTopWidth,
+                  borderColor: ICON_2.color,
                 },
               ]}
-              source={ImageSrc}
-            />
-          </TouchableOpacity>
-          {/*ICON 4*/}
-          <TouchableOpacity
-            style={[
-              styles.iconContain,
-              {
-                borderTopWidth: ICON_4.borderTopWidth,
-                borderColor: ICON_4.color,
-              },
-            ]}
-            onPress={() => iconPress(4)}>
-            <Image
+              onPress={() => iconPress(2)}>
+              <Image
+                style={[
+                  styles.iconImage,
+                  {
+                    tintColor: ICON_2.color,
+                  },
+                ]}
+                source={Icon_contact}
+              />
+            </TouchableOpacity>
+            {/*ICON 3*/}
+            <TouchableOpacity
               style={[
-                styles.iconImage,
+                styles.iconContain,
                 {
-                  tintColor: ICON_4.color,
+                  borderTopWidth: ICON_3.borderTopWidth,
+                  borderColor: ICON_3.color,
                 },
               ]}
-              source={ImageSrc}
-            />
-          </TouchableOpacity>
-          {/*ICON 5*/}
-          <TouchableOpacity
-            style={[
-              styles.iconContain,
-              {
-                borderTopWidth: ICON_5.borderTopWidth,
-                borderColor: ICON_5.color,
-              },
-            ]}
-            onPress={() => iconPress(5)}>
-            <Image
+              onPress={() => iconPress(3)}>
+              <Image
+                style={[
+                  styles.iconImage,
+                  {
+                    tintColor: ICON_3.color,
+                  },
+                ]}
+                source={Icon_map}
+              />
+            </TouchableOpacity>
+            {/*ICON 4*/}
+            <TouchableOpacity
               style={[
-                styles.iconImage,
+                styles.iconContain,
                 {
-                  tintColor: ICON_5.color,
+                  borderTopWidth: ICON_4.borderTopWidth,
+                  borderColor: ICON_4.color,
                 },
               ]}
-              source={ImageSrc}
-            />
+              onPress={() => iconPress(4)}>
+              <Image
+                style={[
+                  styles.iconImage,
+                  {
+                    tintColor: ICON_4.color,
+                  },
+                ]}
+                source={Icon_phone}
+              />
+            </TouchableOpacity>
+            {/*ICON 5*/}
+            <TouchableOpacity
+              style={[
+                styles.iconContain,
+                {
+                  borderTopWidth: ICON_5.borderTopWidth,
+                  borderColor: ICON_5.color,
+                },
+              ]}
+              onPress={() => iconPress(5)}>
+              <Image
+                style={[
+                  styles.iconImage,
+                  {
+                    tintColor: ICON_5.color,
+                  },
+                ]}
+                source={Icon_lock}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/*todo: RENDER-AVATAR*/}
+        <Avatar.Image
+          size={wp('45%')}
+          // source={require('../assets/avatar.png')}AVATAR_SRC
+          source={AVATAR_SRC}
+          style={styles.avatar}
+        />
+        <View style={styles.paper}>
+          <TouchableOpacity>
+            <Text style={{color: 'red', fontSize: 20}}>My Favorites List</Text>
           </TouchableOpacity>
+          <ScrollView style={{flex: 1}}>{_renderContent()}</ScrollView>
         </View>
       </View>
-      <Avatar.Image
-        size={200}
-        source={require('../assets/avatar.png')}
-        style={styles.avatar}
-      />
-      <View style={styles.paper}>
-        <Text style={{color: 'black'}}>{`state itest ${state.isTest}`}</Text>
-        <Text style={{color: 'black'}}>{state.temp}</Text>
-        <TouchableOpacity onPress={() => _pressMe()}>
-          <Text>PRESS ME !</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </GestureRecognizer>
   );
 };
 
@@ -282,7 +378,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     position: 'absolute',
-    top: 50,
+    top: hp('4%'),
     left: wp('30%'),
     right: wp('50%'),
     overflow: 'hidden',
@@ -291,7 +387,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginTop: 80,
+    marginBottom: hp('10%'),
     marginHorizontal: 50,
   },
   iconContain: {
@@ -302,8 +398,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconImage: {
-    width: 30,
-    height: 30,
+    width: wp('10%'),
+    height: wp('10%'),
     resizeMode: 'contain',
   },
 });

@@ -12,3 +12,10 @@ export function ErrorShow(value) {
     payload: value,
   };
 }
+
+export function add_my_favorite(value) {
+  return {
+    type: types.ADD_MY_FAVORITE,
+    payload: value,
+  };
+}
